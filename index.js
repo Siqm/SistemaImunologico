@@ -184,16 +184,17 @@ function rodarAntivirus(tamanhoPopulacao, taxaMutacao, qtdGeracoes, qtdMelhores,
   matrizToString(antivirus.malware.codigoMalware)
   antivirus.anticorpos.sort((a, b) => b.afinidade - a.afinidade)
 
-  console.log('melhor afinidade: ', antivirus.anticorpos[1].afinidade)
+  console.log('Melhor afinidade possivel: ', tamanhoMalware * tamanhoMalware)
+  console.log('Melhor afinidade encontrada: ', antivirus.anticorpos[1].afinidade)
   console.log('Antivirus: ')
   matrizToString(antivirus.anticorpos[1].codigoGenetico)
 }
 
 rodarAntivirus(
   /*tamanhoPopulacao:*/ 100, 
-  /*taxaMutacao:*/ 100, 
+  /*taxaMutacao:*/ 0.1, 
   /*qtdGeracoes:*/ 1000, 
-  /*qtdMelhores:*/ 5, 
+  /*qtdMelhores:*/ 2, 
   /*qtdClones:*/ 50,
   /* tamanhoMalware */ 4
 )
