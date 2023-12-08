@@ -20,11 +20,11 @@ const codigoMalwareEstatico = [
   [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
 ]
 
-function gerarCodigoMalwareAleatorio() {
+function gerarCodigoGeneticoAleatorio(limite) {
   var codigo = []
-  for (i = 0; i < 11; i++) {
+  for (i = 0; i < limite; i++) {
     var linha = []
-    for (j = 0; j < 11; j++) {
+    for (j = 0; j < limite; j++) {
       linha.push(Math.random() >= 0.5 ? 1 : 0)
     }
     codigo.push(linha)
@@ -36,7 +36,7 @@ function matrizToString(matriz) {
   var txt = ""
   for (let i = 0; i < matriz.length; i++) {
     for (let j = 0; j < matriz[i].length; j++) {
-      if (j >= 10) {
+      if (j >= matriz.length - 1) {
         txt += matriz[i][j].toString() + '\n'
       } else {
         txt += matriz[i][j].toString()
@@ -55,132 +55,145 @@ class Malware {
 }
 
 class Anticorpo {
-  constructor() {
-    this.afinidade = parseFloat(Math.random().toFixed(2)); // A afinidade é gerada aleatoriamente
+  constructor(codigoGenetico) {
+    this.codigoGenetico = codigoGenetico;
+    this.afinidade = 0;
   }
 
-  clonar() {
-    const novoAnticorpo = new Anticorpo();
-    novoAnticorpo.afinidade = this.afinidade;
-    return novoAnticorpo;
-  }
-
-  hipermutar() {
-    // Chance de sofrer hipermutação inversamente proporcional à afinidade
-    const chanceHipermutacao = this.afinidade;
-    console.log('chanceHipermutacao', chanceHipermutacao);
-
-    // Aplicar hipermutação se a chance sorteada for compatível
-    if (Math.random() > chanceHipermutacao) {
-      // Realizar a mutação (pode ser uma mutação específica conforme necessário)
-      console.log(`Anticorpo com afinidade ${this.afinidade} sofreu hipermutação.`);
-      console.log('definir hipermutação')
+  compararAnticorpos(outroAnticorpo) {
+    if (this.afinidade > outroAnticorpo.afinidade) {
+      return -1;
     }
+    if (this.afinidade < outroAnticorpo.afinidade) {
+      return 1;
+    }
+    return 0;
   }
 }
 
-class SistemaImunologico {
-  constructor(tamanhoPopulacional) {
-    this.populacaoAnticorpos = [];
-
-    // Geração aleatória da população inicial de anticorpos
-    for (let i = 0; i < tamanhoPopulacional; i++) {
-      this.populacaoAnticorpos.push(new Anticorpo());
-    }
+class Antivirus {
+  constructor(tamanhoPopulacao, tamanhoMalware) {
+    this.populacao = tamanhoPopulacao;
+    this.malware = new Malware(gerarCodigoGeneticoAleatorio(tamanhoMalware))
+    this.anticorpos = this.criarAnticorpos(tamanhoPopulacao, tamanhoMalware)
   }
 
-  selecionarAnticorposMaisAfinidade() {
-    // Seleção dos anticorpos com maior afinidade
-    return this.populacaoAnticorpos.sort((a, b) => b.afinidade - a.afinidade);
+  criarAnticorpos(quantidade, tamanhoAnticorpo) {
+    var tempAnticorpos = []
+    for (let i = 0; i < quantidade; i++) {
+      tempAnticorpos.push(new Anticorpo(gerarCodigoGeneticoAleatorio(tamanhoAnticorpo)))
+    }
+    return tempAnticorpos
   }
 
-  clonarAnticorposMaisPromissores(quantidade) {
-    const selecionados = this.selecionarAnticorposMaisAfinidade().slice(0, qtdClonesSelecionados);
-    console.log('Selecionados: ', selecionados)
-
-    const totalAfinidades = selecionados.reduce((sum, anticorpo) => sum + anticorpo.afinidade, 0);
-    console.log('totalAfinidades', totalAfinidades);
-
-    for (let i = 0; i < selecionados.length; i++) {
-      console.log(`Afinidade do selecionado: ${selecionados[i].afinidade}`)
-      console.log(`Sua proporção:`)
-      console.log(`QCIK: AFik: ${selecionados[i].afinidade}, Σ nk=1 AFik: ${totalAfinidades}, Cl: ${quantidade}`)
-      console.log(`Resultado: `, parseFloat(((selecionados[i].afinidade / totalAfinidades) * quantidade).toFixed(2)))
+  definirAfinidades() {
+    for (i = 0; i < this.anticorpos.length; i++) {
+      this.anticorpos[i].afinidade = this.fitness(this.malware, this.anticorpos[i])
     }
 
-    const proporcoes = selecionados.map((anticorpo) => (parseFloat(((anticorpo.afinidade / totalAfinidades) * quantidade).toFixed(2))));
-    console.log('proporcoes', proporcoes);
+    this.anticorpos.sort((a, b) => b.afinidade - a.afinidade)
+    return this.anticorpos
+  }
 
-    const clones = [];
-    let quantidadeClonesCriados = 0;
-
-    // Clonagem proporcional à afinidade
-    while (quantidadeClonesCriados < quantidade) {
-      for (let i = 0; i < selecionados.length; i++) {
-        const proporcaoClones = proporcoes[i];
-        const quantidadeClonesParaCriar = Math.round((proporcaoClones * quantidade) / quantidade);
-
-        console.log('Clone: ', i)
-        console.log('quantidadeClonesParaCriar: ', quantidadeClonesParaCriar)
-        for (let j = 0; j < quantidadeClonesParaCriar; j++) {
-          console.log(`Clonando: ${JSON.stringify(selecionados[i])}`)
-          clones.push(selecionados[i].clonar());
-          quantidadeClonesCriados++;
-          if (quantidadeClonesCriados >= quantidade) {
-            break;
-          }
-        }
-
-        if (quantidadeClonesCriados >= quantidade) {
-          break;
+  fitness(umMalware, umAnticorpo) {
+    var afinidade = 0;
+    for (let i = 0; i < umAnticorpo.codigoGenetico.length; i++) {
+      for (let j = 0; j < umAnticorpo.codigoGenetico[i].length; j++) {
+        if (umMalware.codigoMalware[i][j] === umAnticorpo.codigoGenetico[i][j]) {
+          afinidade += 1
         }
       }
     }
-
-    return clones;
+    return afinidade
   }
 
-
-  hipermutarAnticorpos(anticorpos) {
-    // Hipermutação dos anticorpos
-    for (const anticorpo of anticorpos) {
-      anticorpo.hipermutar();
+  selecionarMelhores(melhores, quantidade) {
+    var listaMelhores = []
+    for (let i = 0; i < quantidade; i++) {
+      listaMelhores.push(melhores[i])
     }
+    // console.log('listaMelhores', listaMelhores)
+    return listaMelhores
   }
 
-  simularGeracao() {
-    const clones = this.clonarAnticorposMaisPromissores(qtdClonesParaGerar);
-    this.hipermutarAnticorpos(clones);
-    this.populacaoAnticorpos.push(...clones);
-  }
+  clonagem(melhores, populacaoTotal) {
+    var clones = []
+    var totalAfinidades = 0;
+    var clonagens;
+    var contador;
+    var totalClonagens;
+    var tempAfinidade;
 
-  exibirEstado() {
-    // Exibir o estado atual do sistema
-    console.log("Estado do Sistema Imunológico:");
-    for (let i = 0; i < this.populacaoAnticorpos.length; i++) {
-      console.log(`Anticorpo ${i + 1}: Afinidade ${this.populacaoAnticorpos[i].afinidade}`);
+    for (i = 0; i < melhores.length; i++) {
+      totalAfinidades += melhores[i].afinidade
     }
+    for (i = 0; i < melhores.length; i++) {
+      tempAfinidade = melhores[i].afinidade
+      totalClonagens = (tempAfinidade / totalAfinidades) * populacaoTotal;
+      clonagens = Math.round(totalClonagens)
+      contador = 0;
+      while (contador < clonagens) {
+        clones.push(melhores[i])
+        contador += 1
+      }
+    }
+    return clones
   }
+
+  hipermutacao(clones, taxaMutacao) {
+    for (let i = 0; i < clones.length; i++) {
+      for (let j = 0; j < clones[i].codigoGenetico.length; j++) {
+        for (let r = 0; r < clones[i].codigoGenetico[j].length; r++) {
+          const chanceDeMutar = ((1 - clones[i].afinidade / 121) * taxaMutacao) * 100
+          // console.log('chanceDeMutar', chanceDeMutar);
+          if (chanceDeMutar > clones[i].afinidade) {
+            clones[i].codigoGenetico[j][r] = clones[i].codigoGenetico[j][r] === 0 ? 1: 0;
+          }
+        }
+      }
+    }
+    return clones
+  }
+
 }
 
-// // Exemplo de uso
-// const sistemaImunologico = new SistemaImunologico(tamanhoPopulacaoInicial);
-// // sistemaImunologico.exibirEstado();
+function rodarAntivirus(tamanhoPopulacao, taxaMutacao, qtdGeracoes, qtdMelhores, qtdClones, tamanhoMalware) {
+  const antivirus = new Antivirus(tamanhoPopulacao, tamanhoMalware)
+  var populacao = []
+  var melhores = []
+  var clonagem = []
+  var hipermutacao = []
 
-// // Simular geração
-// console.log("--------------------------------------------------------------\n\n\n\n");
-// console.log('Simular NOVA Geração:')
-// sistemaImunologico.exibirEstado();
-// sistemaImunologico.simularGeracao();
-// sistemaImunologico.exibirEstado();
+  var contador = 0;
 
+  while (contador < qtdGeracoes) {
+    // console.log(`Contador = ${contador}`)
+    populacao = antivirus.definirAfinidades()
+    melhores = antivirus.selecionarMelhores(populacao, qtdMelhores)
+    clonagem = antivirus.clonagem(melhores, qtdClones)
+    hipermutacao = antivirus.hipermutacao(clonagem, taxaMutacao)
+    var novos = antivirus.populacao - hipermutacao.length
+    hipermutacao.push(antivirus.criarAnticorpos(novos, tamanhoMalware)[1])
+    antivirus.anticorpos = hipermutacao
+    contador += 1
+  }
 
-const test = new Malware(gerarCodigoMalwareAleatorio())
-matrizToString(test.codigoMalware)
-console.log('estatico: ')
-matrizToString(codigoMalwareEstatico)
+  // populacao = antivirus.definirAfinidades()
+  // melhores = antivirus.selecionarMelhores(populacao, qtdMelhores)
+  console.log('Malware: ')
+  matrizToString(antivirus.malware.codigoMalware)
+  antivirus.anticorpos.sort((a, b) => b.afinidade - a.afinidade)
 
-// gerarCodigoMalwareAleatorio()
-// gerarCodigoMalwareAleatorio()
-// gerarCodigoMalwareAleatorio()
-// gerarCodigoMalwareAleatorio()
+  console.log('melhor afinidade: ', antivirus.anticorpos[1].afinidade)
+  console.log('Antivirus: ')
+  matrizToString(antivirus.anticorpos[1].codigoGenetico)
+}
+
+rodarAntivirus(
+  /*tamanhoPopulacao:*/ 100, 
+  /*taxaMutacao:*/ 100, 
+  /*qtdGeracoes:*/ 1000, 
+  /*qtdMelhores:*/ 5, 
+  /*qtdClones:*/ 50,
+  /* tamanhoMalware */ 4
+)
