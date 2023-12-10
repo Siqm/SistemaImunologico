@@ -76,6 +76,7 @@ class Antivirus {
     this.populacao = tamanhoPopulacao;
     this.malware = new Malware(gerarCodigoGeneticoAleatorio(tamanhoMalware))
     this.anticorpos = this.criarAnticorpos(tamanhoPopulacao, tamanhoMalware)
+    this.tamanhoCodigoGenetico = tamanhoMalware * tamanhoMalware
   }
 
   criarAnticorpos(quantidade, tamanhoAnticorpo) {
@@ -144,10 +145,13 @@ class Antivirus {
     for (let i = 0; i < clones.length; i++) {
       for (let j = 0; j < clones[i].codigoGenetico.length; j++) {
         for (let r = 0; r < clones[i].codigoGenetico[j].length; r++) {
-          const chanceDeMutar = ((1 - clones[i].afinidade / 121) * taxaMutacao) * 100
-          // console.log('chanceDeMutar', chanceDeMutar);
-          if (chanceDeMutar > clones[i].afinidade) {
-            clones[i].codigoGenetico[j][r] = clones[i].codigoGenetico[j][r] === 0 ? 1: 0;
+          const chanceDeMutar = ((1 - clones[i].afinidade / this.tamanhoCodigoGenetico) * taxaMutacao) * 10
+          if (this.malware.codigoMalware[j][r] !== clones[i].codigoGenetico[j][r]) {
+            if (chanceDeMutar > Math.random()) {
+              console.log('mutou')
+              clones[i].codigoGenetico[j][r] = clones[i].codigoGenetico[j][r] === 0 ? 1 : 0;
+              clones[i].afinidade = this.fitness(this.malware, clones[i])
+            }
           }
         }
       }
@@ -177,9 +181,6 @@ function rodarAntivirus(tamanhoPopulacao, taxaMutacao, qtdGeracoes, qtdMelhores,
     antivirus.anticorpos = hipermutacao
     contador += 1
   }
-
-  // populacao = antivirus.definirAfinidades()
-  // melhores = antivirus.selecionarMelhores(populacao, qtdMelhores)
   console.log('Malware: ')
   matrizToString(antivirus.malware.codigoMalware)
   antivirus.anticorpos.sort((a, b) => b.afinidade - a.afinidade)
@@ -191,10 +192,10 @@ function rodarAntivirus(tamanhoPopulacao, taxaMutacao, qtdGeracoes, qtdMelhores,
 }
 
 rodarAntivirus(
-  /*tamanhoPopulacao:*/ 100, 
-  /*taxaMutacao:*/ 0.1, 
-  /*qtdGeracoes:*/ 1000, 
-  /*qtdMelhores:*/ 2, 
+  /*tamanhoPopulacao:*/ 100,
+  /*taxaMutacao:*/ 100,
+  /*qtdGeracoes:*/ 1,
+  /*qtdMelhores:*/ 2,
   /*qtdClones:*/ 50,
-  /* tamanhoMalware */ 4
+  /* tamanhoMalware */ 100
 )
