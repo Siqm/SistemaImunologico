@@ -1,3 +1,10 @@
+var matrizAtivirus = document.getElementById('matriz')
+var melhorAfinidade = document.getElementById('melhorAfinidade')
+var melhorAfinidadeEncontrada = document.getElementById('melhorAfinidadeEncontrada')
+var virus = document.getElementById('virus')
+
+
+
 const tamanhoPopulacaoInicial = 20
 /**
  * qtdClonesSelecionados
@@ -32,19 +39,21 @@ function gerarCodigoGeneticoAleatorio(limite) {
   return codigo
 }
 
+
+
 function matrizToString(matriz) {
-  var txt = ""
+  var txt = "";
   for (let i = 0; i < matriz.length; i++) {
     for (let j = 0; j < matriz[i].length; j++) {
-      if (j >= matriz.length - 1) {
-        txt += matriz[i][j].toString() + '\n'
+      if (j === matriz[i].length - 1) {
+        txt += matriz[i][j].toString() + '<br>';
+        // txt += matriz[i][j].toString() + '\n';
       } else {
-        txt += matriz[i][j].toString()
+        txt += matriz[i][j].toString() + ' ';
       }
     }
   }
-  console.log(txt)
-  // return txt
+  return txt
 }
 
 class Malware {
@@ -161,6 +170,24 @@ class Antivirus {
 
 }
 
+function obterValoresEExecutarAntivirus() {
+  const tamanhoPopulacao = parseFloat(document.getElementById("tamanhoPopulacao").value);
+  const taxaMutacao = parseFloat(document.getElementById("taxaMutacao").value)
+  const quantidadeGeracoes = parseFloat(document.getElementById("quantidadeGeracoes").value)
+  const quantidadeMelhores = parseFloat(document.getElementById("quantidadeMelhores").value)
+  const quantidadeClones = parseFloat(document.getElementById("quantidadeClones").value);
+  const tamanhoMatriz = parseFloat(document.getElementById("tamanhoMatriz").value);
+
+  rodarAntivirus(
+    parseInt(tamanhoPopulacao),
+    parseFloat(taxaMutacao),
+    parseInt(quantidadeGeracoes),
+    parseInt(quantidadeMelhores),
+    parseInt(quantidadeClones),
+    parseInt(tamanhoMatriz)
+  );
+}
+
 function rodarAntivirus(tamanhoPopulacao, taxaMutacao, qtdGeracoes, qtdMelhores, qtdClones, tamanhoMalware) {
   const antivirus = new Antivirus(tamanhoPopulacao, tamanhoMalware)
   var populacao = []
@@ -181,21 +208,34 @@ function rodarAntivirus(tamanhoPopulacao, taxaMutacao, qtdGeracoes, qtdMelhores,
     antivirus.anticorpos = hipermutacao
     contador += 1
   }
-  console.log('Malware: ')
-  matrizToString(antivirus.malware.codigoMalware)
+
+  // populacao = antivirus.definirAfinidades()
+  // melhores = antivirus.selecionarMelhores(populacao, qtdMelhores)
+  // console.log('Malware: ')
+  // matrizToString(antivirus.malware.codigoMalware)
   antivirus.anticorpos.sort((a, b) => b.afinidade - a.afinidade)
 
-  console.log('Melhor afinidade possivel: ', tamanhoMalware * tamanhoMalware)
-  console.log('Melhor afinidade encontrada: ', antivirus.anticorpos[1].afinidade)
-  console.log('Antivirus: ')
-  matrizToString(antivirus.anticorpos[1].codigoGenetico)
+  matrizAtivirus.innerHTML = matrizToString(antivirus.anticorpos[1].codigoGenetico)
+
+  virus.innerHTML =  matrizToString(antivirus.malware.codigoMalware) 
+
+
+
+  melhorAfinidade.textContent = (tamanhoMalware * tamanhoMalware)
+
+  // console.log('Melhor afinidade encontrada: ', antivirus.anticorpos[1].afinidade)
+
+  melhorAfinidadeEncontrada.textContent = antivirus.anticorpos[1].afinidade
+
+  // console.log('Antivirus: ')
+  // matrizToString(antivirus.anticorpos[1].codigoGenetico)
 }
 
-rodarAntivirus(
-  /*tamanhoPopulacao:*/ 100,
-  /*taxaMutacao:*/ 100,
-  /*qtdGeracoes:*/ 1,
-  /*qtdMelhores:*/ 2,
-  /*qtdClones:*/ 50,
-  /* tamanhoMalware */ 100
-)
+// rodarAntivirus(
+//   /*tamanhoPopulacao:*/ 100,
+//   /*taxaMutacao:*/ 100,
+//   /*qtdGeracoes:*/ 1,
+//   /*qtdMelhores:*/ 2,
+//   /*qtdClones:*/ 50,
+//   /* tamanhoMalware */ 100
+// )
